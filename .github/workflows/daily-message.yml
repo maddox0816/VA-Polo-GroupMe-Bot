@@ -25,7 +25,7 @@ jobs:
         id: generate_msg
         run: |
           echo "MESSAGE<<EOF" >> $GITHUB_OUTPUT
-          python your_script.py >> $GITHUB_OUTPUT
+          python feeding.py >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Send Post Request

@@ -1,9 +1,9 @@
 name: Daily GroupMe Message
 
 on:
-  schedule:
+  #schedule:
     # 7:17pm EST
-    - cron: '17 23 * * *'
+    #- cron: '17 23 * * *'
   workflow_dispatch: # Allows manual trigger for testing
 
 jobs:

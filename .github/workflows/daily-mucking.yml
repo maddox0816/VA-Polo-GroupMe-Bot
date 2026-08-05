@@ -1,10 +1,10 @@
-name: Daily GroupMe Message
+name: Daily Mucking Message
 
 on:
-  #schedule:
-    # 7:17pm EST
-    #- cron: '17 23 * * *'
-  workflow_dispatch: # Allows manual trigger for testing
+  schedule:
+    # 10:17am EST
+    - cron: '17 14 * * *'
+  workflow_dispatch:
 
 jobs:
   send-message:
@@ -19,7 +19,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests pandas openpyxl
 
       - name: Run Python Script
         id: generate_msg

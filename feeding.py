@@ -63,7 +63,7 @@ def get_daily_feeders():
         return f"Feeding Reminder ({today.strftime('%B %d')}):\nNo scheduled feeders found for today."
 
     except Exception as err:
-        return f"Feeding Reminder:\nError fetching today's schedule ({err})."
+        return f"Maddox I'm broken\n ({err})."
 
 
 if __name__ == "__main__":

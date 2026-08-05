@@ -2,15 +2,17 @@ import csv
 from datetime import datetime, timedelta
 import io
 import requests
+from zoneinfo import ZoneInfo
 
 
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRMeg5CdW0iqiR7v53RbWWaZgmEMJlP6E1x0Hz9ySZU7gY269eqHgtgKsVgcemmB7hNfqjaWIw6Eh6E/pub?gid=505057465&single=true&output=csv"
+EASTERN_TZ = ZoneInfo("America/New_York")
 
 
 def get_daily_feeders():
     try:
         # Get today's date in local time
-        today = datetime.now()
+        today = datetime.now(EASTERN_TZ)
         target_month = today.month
         target_day = today.day 
 

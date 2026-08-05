@@ -2,9 +2,11 @@ import io
 from datetime import datetime
 import pandas as pd
 import requests
+from zoneinfo import ZoneInfo
 
 # Direct Excel download URL
 EXCEL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_An-0FVaJaUdrkwfb55OVkhjBf7DyhEhcftCc1mw8ykse5ihndrNS3TAYNe1UAA08HjjuCzGlhtJk/pub?output=xlsx"
+EASTERN_TZ = ZoneInfo("America/New_York")
 
 
 def get_mucking_schedule():
@@ -15,7 +17,7 @@ def get_mucking_schedule():
         excel_bytes = io.BytesIO(response.content)
 
         # 2. Get today's local date details
-        now = datetime.now()
+        now = datetime.now(EASTERN_TZ)
         day_name = now.strftime("%A")  # e.g. "Monday", "Saturday"
         month_name = now.strftime("%B")  # e.g. "August", "September"
         day_num = now.day  # e.g. 15

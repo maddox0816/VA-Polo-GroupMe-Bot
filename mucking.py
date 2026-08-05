@@ -83,7 +83,7 @@ def get_mucking_schedule():
             return f"Mucking Reminder ({date_str}):\n\n{names_formatted}"
         else:
             return (
-                f"Mucking Reminder ({date_str}):\nNo mucking entries found."
+                f"Mucking Reminder ({date_str}):\nNobody is mucking today!!!\n\nWe need some volunteers!"
             )
 
     except Exception as err:

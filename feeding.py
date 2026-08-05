@@ -16,9 +16,6 @@ def get_daily_feeders():
         target_month = today.month
         target_day = today.day 
 
-        target_month = 8
-        target_day = 2
-
         # Fetch CSV data from Google Sheets
         response = requests.get(SHEET_CSV_URL, timeout=10)
         response.raise_for_status()

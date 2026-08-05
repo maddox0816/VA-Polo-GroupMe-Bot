@@ -1,0 +1,39 @@
+name: Weekly Bootcamp Message
+
+on:
+  schedule:
+    # 4:17pm EST every friday
+    - cron: '17 21 * * 5'
+  workflow_dispatch:
+
+jobs:
+  send-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Python Script
+        id: generate_msg
+        run: |
+          echo "MESSAGE<<EOF" >> $GITHUB_OUTPUT
+          python bootcamp.py >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Send Post Request
+        env:
+          BOT_ID: ${{ secrets.GROUPME_BOT_ID }}
+          MSG_TEXT: ${{ steps.generate_msg.outputs.MESSAGE }}
+        run: |
+          jq -n --arg bot_id "$BOT_ID" --arg text "$MSG_TEXT" \
+            '{bot_id: $bot_id, text: $text}' | \
+          curl -X POST -H "Content-Type: application/json" \
+            -d @- https://api.groupme.com/v3/bots/post

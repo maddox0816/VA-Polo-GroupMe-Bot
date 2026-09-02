@@ -1,96 +1,66 @@
+import csv
+from datetime import datetime, timedelta
 import io
-from datetime import datetime
-import pandas as pd
 import requests
 from zoneinfo import ZoneInfo
 
-# Direct Excel download URL
-EXCEL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_An-0FVaJaUdrkwfb55OVkhjBf7DyhEhcftCc1mw8ykse5ihndrNS3TAYNe1UAA08HjjuCzGlhtJk/pub?output=xlsx"
+
+SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_An-0FVaJaUdrkwfb55OVkhjBf7DyhEhcftCc1mw8ykse5ihndrNS3TAYNe1UAA08HjjuCzGlhtJk/pub?gid=1248547830&single=true&output=csv"
 EASTERN_TZ = ZoneInfo("America/New_York")
 
 
-def get_mucking_schedule():
+
+def get_daily_muckers():
     try:
-        # 1. Fetch Excel file directly into memory
-        response = requests.get(EXCEL_URL, timeout=15)
+        # Get today's date in local time
+        today = datetime.now(EASTERN_TZ)
+        target_month = today.month
+        target_day = today.day 
+
+        # Fetch CSV data from Google Sheets
+        response = requests.get(SHEET_CSV_URL, timeout=10)
         response.raise_for_status()
-        excel_bytes = io.BytesIO(response.content)
 
-        # 2. Get today's local date details
-        now = datetime.now(EASTERN_TZ)
-        day_name = now.strftime("%A")  # e.g. "Monday", "Saturday"
-        month_name = now.strftime("%B")  # e.g. "August", "September"
-        day_num = now.day  # e.g. 15
-        is_weekday = now.weekday() in {6, 0, 1, 3}  # Sun, Mon, Tues, Thurs
+        # Parse CSV
+        csv_file = io.StringIO(response.text)
+        reader = csv.DictReader(csv_file)
 
-        muckers = []
+        # Look for today's entry
+        for row in reader:
+            raw_month = row.get("month", "").strip()
+            raw_date = row.get("date", "").strip()
 
-        if is_weekday:
-            # READ FROM "Weekly" TAB
-            df_weekly = pd.read_excel(excel_bytes, sheet_name="Weekly")
+            # Skip rows where month or date are blank
+            if not raw_month or not raw_date:
+                continue
 
-            # Check if the weekday column exists in the tab
-            matching_col = [
-                col for col in df_weekly.columns if str(col).strip() == day_name
-            ]
-            if matching_col:
-                col_data = df_weekly[matching_col[0]].dropna().tolist()
-                # Clean entries and exclude header strings or instructions
-                muckers = [
-                    str(name).strip()
-                    for name in col_data
-                    if not str(name).startswith("^")
-                    and "Varsity" not in str(name)
-                ]
+            try:
+                row_month = int(raw_month)
+                row_date = int(raw_date)
+            except ValueError:
+                continue
+            
+            # Check for match with today's date
+            if row_month == target_month and row_date == target_day:
+                # get muckers that will be in comma separated list like Gwen Darrow, Fernando Palacios, Samad Sultan (no car), Marcos (no car), Nora
+                muckers_raw = row.get("muckers", "").strip()
+                muckers = [name.strip() for name in muckers_raw.split(",") if name.strip()]
 
-        else:
-            # READ FROM MONTHLY TAB (e.g. "August", "September")
-            xls = pd.ExcelFile(excel_bytes)
-            if month_name in xls.sheet_names:
-                df_month = pd.read_excel(excel_bytes, sheet_name=month_name)
+                if not muckers:
+                    feeder_message = "Nobody is mucking today!!!"
+                else:
+                    feeder_message = f"{chr(10).join(muckers)} \nare mucking today!"
 
-                # Search grid for today's numerical date
-                found = False
-                for r_idx in range(len(df_month)):
-                    for c_idx in range(7):
-                        cell_val = df_month.iloc[r_idx, c_idx]
-                        try:
-                            if float(cell_val) == float(day_num):
-                                # Look up to 5 rows below the date cell for signed-up names
-                                for k in range(1, 6):
-                                    if r_idx + k < len(df_month):
-                                        name_val = df_month.iloc[
-                                            r_idx + k, c_idx
-                                        ]
-                                        if pd.notna(name_val):
-                                            try:
-                                                # If it encounters another date or number, stop
-                                                float(name_val)
-                                                break
-                                            except ValueError:
-                                                muckers.append(
-                                                    str(name_val).strip()
-                                                )
-                                found = True
-                                break
-                        except (ValueError, TypeError):
-                            continue
-                    if found:
-                        break
+                return (
+                    f"Mucking Reminder ({today.strftime('%B %d')}):\n\n"
+                    f"{feeder_message}"
+                )
 
-        # 3. Format output string for GroupMe
-        date_str = now.strftime("%B %d")
-        if muckers:
-            names_formatted = "\n".join([f"{name}" for name in muckers])
-            return f"Mucking Reminder ({date_str}):\n\n{names_formatted}"
-        else:
-            return (
-                f"Mucking Reminder ({date_str}):\nNobody is mucking today!!!\n\nWe need some volunteers!"
-            )
+        return f"Mucking Reminder ({today.strftime('%B %d')}):\nNo scheduled muckers found for today."
 
     except Exception as err:
         return f"Maddox I'm broken\n ({err})."
 
 
 if __name__ == "__main__":
-    print(get_mucking_schedule())
+    print(get_daily_muckers())

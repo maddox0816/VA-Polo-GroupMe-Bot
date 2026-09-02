@@ -11,10 +11,11 @@ EASTERN_TZ = ZoneInfo("America/New_York")
 
 def get_daily_feeders():
     try:
-        # Get today's date in local time
+        # Look up the next day in local time, since the sheet is for tomorrow's feeders.
         today = datetime.now(EASTERN_TZ)
-        target_month = today.month
-        target_day = today.day 
+        target_date = today + timedelta(days=1)
+        target_month = target_date.month
+        target_day = target_date.day
 
         # Fetch CSV data from Google Sheets
         response = requests.get(SHEET_CSV_URL, timeout=10)
@@ -24,7 +25,7 @@ def get_daily_feeders():
         csv_file = io.StringIO(response.text)
         reader = csv.DictReader(csv_file)
 
-        # Look for today's entry
+        # Look for tomorrow's entry
         for row in reader:
             raw_month = row.get("month", "").strip()
             raw_date = row.get("date", "").strip()
@@ -39,13 +40,11 @@ def get_daily_feeders():
             except ValueError:
                 continue
 
-            # Check for match with today's date
+            # Check for match with tomorrow's date
             if row_month == target_month and row_date == target_day:
                 feeder1 = row.get("feeder1", "").strip()
                 feeder2 = row.get("feeder2", "").strip()
                 feeders = [name for name in (feeder1, feeder2) if name]
-
-                tomorrow = today + timedelta(days=1)
 
                 if not feeders:
                     feeder_message = "Nobody is feeding tomorrow!!!"
@@ -55,11 +54,11 @@ def get_daily_feeders():
                     feeder_message = f"{feeders[0]} and {feeders[1]} are feeding tomorrow!"
 
                 return (
-                    f"Feeding Reminder ({tomorrow.strftime('%B %d')}):\n\n"
+                    f"Feeding Reminder ({target_date.strftime('%B %d')}):\n\n"
                     f"{feeder_message}"
                 )
 
-        return f"Feeding Reminder ({today.strftime('%B %d')}):\nNo scheduled feeders found for today."
+        return f"Feeding Reminder ({target_date.strftime('%B %d')}):\nNo scheduled feeders found for tomorrow."
 
     except Exception as err:
         return f"Maddox I'm broken\n ({err})."

@@ -1,9 +1,9 @@
 name: Daily Mucking Message
 
 on:
-  schedule:
-    # 10:17am EST
-    - cron: '17 14 * * *'
+  # schedule:
+  #   # 10:17am EST
+  #   - cron: '17 14 * * *'
   workflow_dispatch:
 
 jobs:

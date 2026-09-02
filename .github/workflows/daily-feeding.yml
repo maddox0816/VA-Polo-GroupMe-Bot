@@ -1,9 +1,9 @@
 name: Daily Feeding Message
 
 on:
-  schedule:
-    # 7:17pm EST
-    - cron: '17 23 * * *'
+  # schedule:
+  #   # 7:17pm EST
+  #   - cron: '17 23 * * *'
   workflow_dispatch:
 
 jobs:
